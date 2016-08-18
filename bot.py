@@ -9,8 +9,6 @@ import re
 import time, thread
 from time import sleep
 
-import pymysql.cursors
-
 class Command(object):
     cmd = ""
     response = ""
@@ -21,6 +19,23 @@ class Command(object):
         self.response = response
         self.description = description
         self.op = op
+
+def parse(c, s):
+    if c.response.find("~") > -1:
+        list = c.response.split("~")
+        for item in list:
+            if item.find("{") > -1:
+                code = item.split("{")[1].split("}")[0]
+                utils.chat(s, item.split("{")[0] + eval(code))
+            else:
+                utils.chat(s, item)
+    else:
+
+        if c.response.find("{") > -1:
+            code = c.response.split("{")[1].split("}")[0]
+            utils.chat(s, c.response.split("{")[0] + eval(code))
+        else:
+            utils.chat(s, c.response)
 
 def main():
     # Networking functions
@@ -52,40 +67,11 @@ def main():
 
             for c in cmd:
                 if message.strip() == c.cmd:
-                    if c.op == 1:
-                        if utils.isOp(username):
-                            if c.response.find("~") > -1:
-                                list = c.response.split("~")
-                                for item in list:
-                                    if item.find("{") > -1:
-                                        code = item.split("{")[1].split("}")[0]
-                                        utils.chat(s, item.split("{")[0] + eval(code))
-                                    else:
-                                        utils.chat(s, item)
-                            else:
-
-                                if c.response.find("{") > -1:
-                                    code = c.response.split("{")[1].split("}")[0]
-                                    utils.chat(s, c.response.split("{")[0] + eval(code))
-                                else:
-                                    utils.chat(s, c.response)
-                        else:
-                            continue
+                    if c.op == 0:
+                        parse(c, s)
                     else:
-                        if c.response.find("~") > -1:
-                            list = c.response.split("~")
-                            for item in list:
-                                if item.find("{") > -1:
-                                    code = item.split("{")[1].split("}")[0]
-                                    utils.chat(s, item.split("{")[0] + eval(code))
-                                else:
-                                    utils.chat(s, item)
-                        else:
-                            if c.response.find("{") > -1:
-                                code = c.response.split("{")[1].split("}")[0]
-                                utils.chat(s, c.response.split("{")[0] + eval(code))
-                            else:
-                                utils.chat(s, c.response)
+                        if utils.isOp(username):
+                            parse(c, s)
         sleep(1)
     utils.chat(s, "Bye everyone :)");
 if __name__ == "__main__":
