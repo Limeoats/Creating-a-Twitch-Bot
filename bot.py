@@ -3,10 +3,24 @@
 
 import cfg
 import utils
+import sql
 import socket
 import re
 import time, thread
 from time import sleep
+
+import pymysql.cursors
+
+class Command(object):
+    cmd = ""
+    response = ""
+    description = ""
+    op = 0
+    def __init__(self, cmd, response, description, op):
+        self.cmd = cmd
+        self.response = response
+        self.description = description
+        self.op = op
 
 def main():
     # Networking functions
@@ -21,6 +35,12 @@ def main():
 
     thread.start_new_thread(utils.threadFillOpList, ())
 
+    commands = sql.getCommands()
+
+    cmd = []
+    for c in commands:
+        cmd.append(Command(c["Command"], c["Response"], c["Description"], c["Op"]))
+
     while True:
         response = s.recv(1024).decode("utf-8")
         if response == "PING :tmi.twitch.tv\r\n":
@@ -30,13 +50,43 @@ def main():
             message = CHAT_MSG.sub("", response)
             print(response)
 
-            # Custom commands
-            if message.strip() == "!time":
-                utils.chat(s, "It is currently " + time.strftime("%I:%M %p %Z on %A, %B %d, %Y."))
-            if message.strip() == "!messages" and utils.isOp(username):
-                utils.chat(s, "Please give Limeoats a follow at twitter.com/limeoats! All follows are greatly appreciated!!")
-                utils.chat(s, "Go to patreon.com/limeoats to support me! :)")
-        sleep(1)
+            for c in cmd:
+                if message.strip() == c.cmd:
+                    if c.op == 1:
+                        if utils.isOp(username):
+                            if c.response.find("~") > -1:
+                                list = c.response.split("~")
+                                for item in list:
+                                    if item.find("{") > -1:
+                                        code = item.split("{")[1].split("}")[0]
+                                        utils.chat(s, item.split("{")[0] + eval(code))
+                                    else:
+                                        utils.chat(s, item)
+                            else:
 
+                                if c.response.find("{") > -1:
+                                    code = c.response.split("{")[1].split("}")[0]
+                                    utils.chat(s, c.response.split("{")[0] + eval(code))
+                                else:
+                                    utils.chat(s, c.response)
+                        else:
+                            continue
+                    else:
+                        if c.response.find("~") > -1:
+                            list = c.response.split("~")
+                            for item in list:
+                                if item.find("{") > -1:
+                                    code = item.split("{")[1].split("}")[0]
+                                    utils.chat(s, item.split("{")[0] + eval(code))
+                                else:
+                                    utils.chat(s, item)
+                        else:
+                            if c.response.find("{") > -1:
+                                code = c.response.split("{")[1].split("}")[0]
+                                utils.chat(s, c.response.split("{")[0] + eval(code))
+                            else:
+                                utils.chat(s, c.response)
+        sleep(1)
+    utils.chat(s, "Bye everyone :)");
 if __name__ == "__main__":
     main()

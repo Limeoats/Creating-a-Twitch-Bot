@@ -3,9 +3,16 @@
 
 HOST = "irc.twitch.tv"
 PORT = 6667
-NICK = "MakingATwitchBot"
-PASS = "oauth:vanelprtpmsbmg2ygzu269aai6eqe2"
+NICK = "limeoatsbot"
+PASS = ""
 CHAN = "limeoats"
 RATE = (20/30) # messages per second
+
+DBHOST = 'localhost'
+DBUSER = 'root'
+DBPASS = 'root'
+DB = 'Limeoats'
+
+
 
 oplist = {}
